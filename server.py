@@ -34,7 +34,6 @@ class Server(object):
     listeningPort.listen(5)
     while True:
       conn, addr = listeningPort.accept()
-      print('4')
       data = conn.recv(1024).decode()
       print("Message recieved: " + data)
       if (data == "STOP"):
