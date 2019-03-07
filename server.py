@@ -25,6 +25,9 @@ class Server(object):
     socketThread.daemon, timerThread.daemon = True, True
     socketThread.start()
     timerThread.start()
+    self.run()
+
+  def run(self):
     command = ''
     while command != 'q': 
       print("Commands:")
