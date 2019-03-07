@@ -47,16 +47,17 @@ class Server(object):
     while True:
       conn, addr = listeningPort.accept()
       data = conn.recv(1024)
-      print("Message recieved: " + data)
       if (data == "STOP"):
         self.message = "STOP"
         break
-      trans = pickle.loads(data)
-      print("Transaction received!", trans)
-      self.tempTxns.append(trans)
-      if len(self.tempTxns) == 2:
-        self.addToBlockchain(self.tempTxns)
-        self.tempTxns = []
+      data = pickle.loads(data)
+      if (isinstance(data, str)):
+        trans = data
+        print("Transaction received!", trans)
+        self.tempTxns.append(trans)
+        if len(self.tempTxns) == 2:
+          self.addToBlockchain(self.tempTxns)
+          self.tempTxns = []
       conn.close()
 
   def setupTimer(self, interval=1):
