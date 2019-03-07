@@ -8,7 +8,11 @@ from states.follower import *
 import serverConfig
 import random
 
+<<<<<<<
 #serverState = {'follower': 0, 'candidate': 1, 'leader': 2}
+=======
+# serverState = {'follower': 0, 'candidate': 1, 'leader': 2}
+>>>>>>>
 
 class Server(object):
 
@@ -45,6 +49,7 @@ class Server(object):
     socketThread.start()
     timerThread.start()
 
+<<<<<<<
   def setupQuitting(self):
     command = ''
     while command != 'q':
@@ -61,6 +66,24 @@ class Server(object):
           printBlock(block)
       else:
         print("Invalid command! Try again...")
+=======
+  def setupQuitting(self):
+    command = ''
+    while command != 'q': 
+      print("Commands:")
+      print("\tSee blockchain: b")
+      print("\tQuit: q")
+      command = raw_input("Enter command: ")
+      if command == 'q':
+        print("Quitting")
+        break
+      elif command == 'b':
+        print("Printing blockchain...")
+        for block in self.blockchain:
+          printBlock(block)
+      else:
+        print("Invalid command! Try again...")
+>>>>>>>
 
   def setupListeningSocket(self, host, port):
     listeningPort = socket.socket()
@@ -81,7 +104,9 @@ class Server(object):
         print("I got request vote")
         self.currentState.respondToRequestVote(self, data_object)
       elif (isinstance(data_object, AppendEntry)):
+<<<<<<< HEAD
           if(data_object.entries == []):
+<<<<<<<
                print("Got heartbeat")
       elif (isinstance(data_object, str)):
         trans = data_object
@@ -91,6 +116,22 @@ class Server(object):
           self.addToBlockchain(self.tempTxns)
           self.tempTxns = []
     conn.close()
+=======
+              print("Got heartbeat")
+=======
+          print("Got heartbeat")
+      elif (isinstance(data_object, str)):
+        trans = data_object
+        print("Transaction received!", trans)
+        self.tempTxns.append(trans)
+        if len(self.tempTxns) == 2:
+          self.addToBlockchain(self.tempTxns)
+          self.tempTxns = []
+>>>>>>> aneesha
+      else:
+        print("K bye")
+      conn.close()
+>>>>>>>
 
   def setupTimer(self, interval=1):
     currentInterval = interval
