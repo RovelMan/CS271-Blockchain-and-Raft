@@ -20,9 +20,14 @@ class Leader:
         print("Heartbeat sent")
 
     def sendHeartbeat(self, heartbeat):
-        s = socket.socket()
-        print("Sending HEARTBEAT to " + str(heartbeat.receiver))
-        s.connect(("127.0.0.1", heartbeat.receiver))
-        dataString = pickle.dumps(heartbeat)
-        s.send(dataString)
-        s.close()
+        try:
+            s = socket.socket()
+            print("Sending HEARTBEAT to " + str(heartbeat.receiver))
+            s.connect(("127.0.0.1", heartbeat.receiver))
+            dataString = pickle.dumps(heartbeat)
+            s.send(dataString)
+            s.close()
+        except socket.error as e:
+            for id, port in serverConfig.SERVER_PORTS.items():
+                if port == heartbeat.receiver:
+                    print(str(id).upper()+" is down")
