@@ -1,6 +1,6 @@
 import sys, socket, threading, pickle, time, random
 from block import printBlock, Block
-from messages.raftMessage import  Message
+from messages.raftMessage import Message
 from messages.requestVote import RequestVote, RequestVoteResponse
 from messages.appendEntry import AppendEntry
 from states.candidate import *
@@ -8,7 +8,7 @@ from states.follower import *
 import serverConfig
 import random
 
-# serverState = {'follower': 0, 'candidate': 1, 'leader': 2}
+#serverState = {'follower': 0, 'candidate': 1, 'leader': 2}
 
 class Server(object):
 
@@ -62,10 +62,10 @@ class Server(object):
           printBlock(block)
       else:
         print("Invalid command! Try again...")
-=======
+
   def setupQuitting(self):
     command = ''
-    while command != 'q': 
+    while command != 'q':
       print("Commands:")
       print("\tSee blockchain: b")
       print("\tQuit: q")
@@ -79,7 +79,6 @@ class Server(object):
           printBlock(block)
       else:
         print("Invalid command! Try again...")
->>>>>>>
 
   def setupListeningSocket(self, host, port):
     listeningPort = socket.socket()
@@ -93,7 +92,8 @@ class Server(object):
       print("Message recieved: " + str(data_object))
       if (isinstance(data_object, RequestVoteResponse)):
         self.message = "STOP"
-        self.currentState.handleResponseVote(self, data_object)
+        if(isinstance(self.currentState, Candidate)):
+            self.currentState.handleResponseVote(self, data_object)
         continue
       elif (isinstance(data_object, RequestVote)):
         self.message = "STOP"
