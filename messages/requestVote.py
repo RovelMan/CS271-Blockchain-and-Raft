@@ -1,6 +1,6 @@
 from raftmessage import Message
 
-class RequestVote:
+class RequestVote(Message):
     def __init__(self, currentTerm, sender, receiver, candidateId, lastLogIndex, lastLogTerm):
         Message.__init__(self, currentTerm, sender, receiver)
         self.candidateId = candidateId
@@ -8,7 +8,7 @@ class RequestVote:
         self.lastLogTerm = lastLogTerm
 
 
-class RequestVoteResponse:
+class RequestVoteResponse(Message):
     def __init__(self, currentTerm, sender, receiver, acceptVote):
         Message.__init__(self, currentTerm, sender, receiver)
         self.acceptVote = acceptVote

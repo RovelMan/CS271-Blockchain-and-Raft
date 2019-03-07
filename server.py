@@ -1,12 +1,17 @@
 import sys, socket, threading, pickle, time, random
 from block import printBlock, Block
+from messages.raftmessage import  Message
+from messages.requestVote import RequestVote, RequestVoteResponse
+from messages.appendEntry import AppendEntry
+from states.candidate import *
+from states.follower import *
+import serverConfig
 
-serverPorts = {'x': 7100, 'y': 7200, 'z': 7300}
-serverState = {'follower': 0, 'candidate': 1, 'leader': 2}
+# serverState = {'follower': 0, 'candidate': 1, 'leader': 2}
 
 class Server(object):
 
-  def __init__(self, id):
+  def __init__(self, id, state):
     if ((id != 'x') and (id != 'y') and (id != 'z')):
 		  print("Error! Invalid Server ID \nHas to be x, y or z \nQuitting...")
 		  return
@@ -16,18 +21,29 @@ class Server(object):
 
     self.id = id
     self.host = "127.0.0.1"
-    self.port = serverPorts[id]
+    self.port = serverConfig.SERVER_PORTS[id]
     self.message = None
-    self.currentState = serverState['follower']
+    self.currentState = state
+    self.log = {}
+    self.commitIndex = 0
+    self.currentTerm = 0
+    self.lastLogTerm = 0
+    self.lastLogIndex = 0
     print("Setup for Server" + self.id.upper() + " done!")
+    self.run()
+
+  def run(self):
+    self.initializeAllThreads()
+    self.setupQuitting()
+
+  def initializeAllThreads(self):
     socketThread = threading.Thread(target=self.setupListeningSocket, args=(self.host, self.port))
     timerThread = threading.Thread(target=self.setupTimer, args=(10,))
     socketThread.daemon, timerThread.daemon = True, True
     socketThread.start()
     timerThread.start()
-    self.run()
 
-  def run(self):
+  def setupQuitting(self):
     command = ''
     while command != 'q': 
       print("Commands:")
@@ -36,6 +52,7 @@ class Server(object):
       command = raw_input("Enter command: ")
       if command == 'q':
         print("Quitting")
+        break
       elif command == 'b':
         print("Printing blockchain...")
         for block in self.blockchain:
@@ -50,52 +67,48 @@ class Server(object):
     while True:
       conn, addr = listeningPort.accept()
       data = conn.recv(1024)
-      data = pickle.loads(data)
-      if (isinstance(data, str)):
-        if (data == "STOP"):
-          self.message = "STOP"
-          break
-        trans = data
+      #print("Before unpickling: " + str(data))
+      data_object = pickle.loads(data)
+      print("Message recieved: " + str(data_object))
+      if (isinstance(data_object, RequestVoteResponse)):
+        self.message = "STOP"
+        self.currentState.handleResponseVote(self, data_object)
+        continue
+      elif (isinstance(data_object, RequestVote)):
+        self.message = "STOP"
+        print("I got request vote")
+        self.currentState.respondToRequestVote(self, data_object)
+      elif (isinstance(data_object, AppendEntry)):
+          print("Got heartbeat")
+      elif (isinstance(data_object, str)):
+        trans = data_object
         print("Transaction received!", trans)
         self.tempTxns.append(trans)
         if len(self.tempTxns) == 2:
           self.addToBlockchain(self.tempTxns)
           self.tempTxns = []
+      else:
+        print("K bye")
       conn.close()
 
   def setupTimer(self, interval=1):
     currentInterval = interval
     while True:
       time.sleep(1)
+      if currentInterval == 0:
+        print("Message recieved!")
+        self.currentState = Candidate()
+        self.currentState.startElection(self)
+        return
       if self.message == "STOP":
-        print("Message recieved! Timer stopped")
-        return
-      if currentInterval == 0 and self.message == None:
-        self.startElection()
-        # self.currentState = Candidate()
-        # self.currentState.startElection()
-        return
+          print("Timer stopped")
+          break
       else:
         print('Timer: ' + str(currentInterval) + ' seconds left')
         currentInterval -= 1
 
-  def startElection(self):
-    dkeys = serverPorts.keys()
-    for d in dkeys:
-      if (d != self.id):
-        try:
-          s = socket.socket()
-          print("Sending STOP message to " + str(serverPorts[d]))
-          s.connect(("127.0.0.1", serverPorts[d]))
-          s.send(pickle.dumps("STOP"))
-          s.close()
-        except:
-          print("Server" + d.upper() + " is down!")
-          continue
-    print("Election Over")
-
   def addToBlockchain(self, txns):
-    block = Block(1, txns)
+    block = Block(self.currentTerm, txns)
     block.hash_block()
     if len(self.blockchain) == 0:
       block.hash_prev_block(None)
@@ -104,4 +117,5 @@ class Server(object):
     self.blockchain.append(block)
 
 if __name__ == '__main__':
-  server = Server(sys.argv[1])
+  state = Follower()
+  server = Server(sys.argv[1], state)
