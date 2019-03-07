@@ -22,17 +22,22 @@ class Candidate:
         print("Election Begun")
 
     def sendReqVoteMessage(self, reqVoteMsg):
-        s = socket.socket()
-        print("Sending REQUESTVOTE message to " + str(reqVoteMsg.receiver))
-        s.connect(("127.0.0.1", reqVoteMsg.receiver))
-        dataString = pickle.dumps(reqVoteMsg)
-        s.send(dataString)
-        s.close()
+        try:
+            s = socket.socket()
+            print("Sending REQUESTVOTE message to " + str(reqVoteMsg.receiver))
+            s.connect(("127.0.0.1", reqVoteMsg.receiver))
+            dataString = pickle.dumps(reqVoteMsg)
+            s.send(dataString)
+            s.close()
+        except socket.error as e:
+            for id, port in serverConfig.SERVER_PORTS.items():
+                if port == reqVoteMsg.receiver:
+                    print(str(id).upper()+" is down")
 
     def handleResponseVote(self, server, vote):
         print("I got response vote from "+str(vote.sender))
         self.votesReceived.append(vote.sender)
-        if (len(self.votesReceived) == 2):
+        if (len(self.votesReceived)+1 >=2):
             server.currentState = Leader()
             server.currentState.initiateLeader(server)
             print(" I am now leader")

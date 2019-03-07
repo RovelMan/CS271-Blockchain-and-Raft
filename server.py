@@ -5,6 +5,7 @@ from messages.appendEntry import AppendEntry
 from states.candidate import *
 from states.follower import *
 import serverConfig
+import random
 
 serverState = {'follower': 0, 'candidate': 1, 'leader': 2}
 
@@ -40,7 +41,8 @@ class Server(object):
 
   def initializeAllThreads(self):
     socketThread = threading.Thread(target=self.setupListeningSocket, args=(self.host, self.port))
-    timerThread = threading.Thread(target=self.setupTimer, args=(10,))
+    timeout = random.randint(6,20)
+    timerThread = threading.Thread(target=self.setupTimer, args=(timeout,))
     socketThread.daemon, timerThread.daemon = True, True
     socketThread.start()
     timerThread.start()
@@ -66,7 +68,8 @@ class Server(object):
         print("I got request vote")
         self.currentState.respondToRequestVote(self, data_object)
       elif (isinstance(data_object, AppendEntry)):
-          print("Got heartbeat")
+          if(data_object.entries == []):
+              print("Got heartbeat")
       else:
         print("K bye")
       conn.close()

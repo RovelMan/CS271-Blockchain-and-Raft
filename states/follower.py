@@ -18,9 +18,14 @@ class Follower:
             self.sendReqVoteResponseMessage(voteResponse)
 
     def sendReqVoteResponseMessage(self, reqVoteResponse):
-        s = socket.socket()
-        print("Sending REQUESTVOTERESPONSE message to " + str(reqVoteResponse.receiver))
-        s.connect(("127.0.0.1", reqVoteResponse.receiver))
-        dataString = pickle.dumps(reqVoteResponse)
-        s.send(dataString)
-        s.close()
+        try:
+            s = socket.socket()
+            print("Sending REQUESTVOTERESPONSE message to " + str(reqVoteResponse.receiver))
+            s.connect(("127.0.0.1", reqVoteResponse.receiver))
+            dataString = pickle.dumps(reqVoteResponse)
+            s.send(dataString)
+            s.close()
+        except socket.error as e:
+            for id, port in serverConfig.SERVER_PORTS.items():
+                if port == reqVoteResponse.receiver:
+                    print(str(id).upper()+" is down")
