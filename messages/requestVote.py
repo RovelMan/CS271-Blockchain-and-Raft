@@ -10,5 +10,5 @@ class RequestVote(Message):
 
 class RequestVoteResponse(Message):
     def __init__(self, currentTerm, sender, receiver, acceptVote):
-        Message.__init__(self, curentTerm, sender, receiver)
+        Message.__init__(self, currentTerm, sender, receiver)
         self.acceptVote = acceptVote

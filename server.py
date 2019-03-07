@@ -1,22 +1,24 @@
 import sys, socket, threading, pickle, time, random
 from messages.raftmessage import  Message
 from messages.requestVote import RequestVote, RequestVoteResponse
+from messages.appendEntry import AppendEntry
 from states.candidate import *
+from states.follower import *
+import serverConfig
 
-serverPorts = {'x': 7100, 'y': 7200, 'z': 7300}
 serverState = {'follower': 0, 'candidate': 1, 'leader': 2}
 
 class Server(object):
 
-  def __init__(self, id):
+  def __init__(self, id, state):
     if ((id != 'x') and (id != 'y') and (id != 'z')):
 		  print("Error! Invalid Server ID \nHas to be x, y or z \nQuitting...")
 		  return
     self.id = id
     self.host = "127.0.0.1"
-    self.port = serverPorts[id]
+    self.port = serverConfig.SERVER_PORTS[id]
     self.message = None
-    self.currentState = serverState['follower']
+    self.currentState = state
     self.log = {}
     self.commitIndex = 0
     self.currentTerm = 0
@@ -51,22 +53,20 @@ class Server(object):
     while True:
       conn, addr = listeningPort.accept()
       data = conn.recv(1024)
-      print("Before unpickling: " + str(data))
+      #print("Before unpickling: " + str(data))
       data_object = pickle.loads(data)
       print("Message recieved: " + str(data_object))
-      # if (isinstance(data_object, basestring) and data_object == "STOP"):
-      #   self.message = "STOP"
-      #   break
+
       if (isinstance(data_object, RequestVoteResponse)):
         self.message = "STOP"
-        #handleResponseVote(self, data_object)
-        print("I got response vote")
-        #self.vote_received(data_object)
-        break
+        self.currentState.handleResponseVote(self, data_object)
+        continue
       elif (isinstance(data_object, RequestVote)):
         self.message = "STOP"
         print("I got request vote")
-        respondToRequestVote(self, data_object)
+        self.currentState.respondToRequestVote(self, data_object)
+      elif (isinstance(data_object, AppendEntry)):
+          print("Got heartbeat")
       else:
         print("K bye")
       conn.close()
@@ -80,8 +80,8 @@ class Server(object):
       #   return
       if currentInterval == 0:
         print("Message recieved!")
-        self.currentState = serverState['candidate']
-        startElection(self)
+        self.currentState = Candidate()
+        self.currentState.startElection(self)
         # self.currentState = Candidate()
         # self.currentState.startElection()
         return
@@ -93,4 +93,5 @@ class Server(object):
         currentInterval -= 1
 
 if __name__ == '__main__':
-  server = Server(sys.argv[1])
+  state = Follower()
+  server = Server(sys.argv[1], state)
