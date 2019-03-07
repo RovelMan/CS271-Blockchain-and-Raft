@@ -1,5 +1,5 @@
 import sys, socket, threading, pickle, time, random
-from bitcoinClasses import printBlock, Block
+from block import printBlock, Block
 
 serverPorts = {'x': 7100, 'y': 7200, 'z': 7300}
 serverState = {'follower': 0, 'candidate': 1, 'leader': 2}
@@ -50,11 +50,11 @@ class Server(object):
     while True:
       conn, addr = listeningPort.accept()
       data = conn.recv(1024)
-      if (data == "STOP"):
-        self.message = "STOP"
-        break
       data = pickle.loads(data)
       if (isinstance(data, str)):
+        if (data == "STOP"):
+          self.message = "STOP"
+          break
         trans = data
         print("Transaction received!", trans)
         self.tempTxns.append(trans)
@@ -87,7 +87,7 @@ class Server(object):
           s = socket.socket()
           print("Sending STOP message to " + str(serverPorts[d]))
           s.connect(("127.0.0.1", serverPorts[d]))
-          s.send("STOP")
+          s.send(pickle.dumps("STOP"))
           s.close()
         except:
           print("Server" + d.upper() + " is down!")
