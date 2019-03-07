@@ -11,4 +11,4 @@ class Message:
         self.currentTerm = currentTerm
         self.sender = sender
         self.receiver = receiver
-        self.data = data
+        #self.data = data
