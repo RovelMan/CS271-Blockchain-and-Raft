@@ -62,6 +62,24 @@ class Server(object):
           printBlock(block)
       else:
         print("Invalid command! Try again...")
+=======
+  def setupQuitting(self):
+    command = ''
+    while command != 'q': 
+      print("Commands:")
+      print("\tSee blockchain: b")
+      print("\tQuit: q")
+      command = raw_input("Enter command: ")
+      if command == 'q':
+        print("Quitting")
+        break
+      elif command == 'b':
+        print("Printing blockchain...")
+        for block in self.blockchain:
+          printBlock(block)
+      else:
+        print("Invalid command! Try again...")
+>>>>>>>
 
   def setupListeningSocket(self, host, port):
     listeningPort = socket.socket()
