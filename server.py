@@ -1,6 +1,6 @@
 import sys, socket, threading, pickle, time, random
 from block import printBlock, Block
-from messages.raftmessage import  Message
+from messages.raftMessage import  Message
 from messages.requestVote import RequestVote, RequestVoteResponse
 from messages.appendEntry import AppendEntry
 from states.candidate import *
@@ -34,7 +34,7 @@ class Server(object):
 
   def run(self):
     self.initializeAllThreads()
-    self.setupQuitting()
+    self.setupCommandTerminal()
 
   def initializeAllThreads(self):
     socketThread = threading.Thread(target=self.setupListeningSocket, args=(self.host, self.port))
@@ -43,7 +43,7 @@ class Server(object):
     socketThread.start()
     timerThread.start()
 
-  def setupQuitting(self):
+  def setupCommandTerminal(self):
     command = ''
     while command != 'q': 
       print("Commands:")
@@ -55,6 +55,7 @@ class Server(object):
         break
       elif command == 'b':
         print("Printing blockchain...")
+        print("Showing " + len(self.blockchain) + " blocks from the blockchain:")
         for block in self.blockchain:
           printBlock(block)
       else:

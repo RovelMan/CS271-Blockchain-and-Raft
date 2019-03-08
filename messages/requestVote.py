@@ -1,4 +1,4 @@
-from raftmessage import Message
+from raftMessage import Message
 
 class RequestVote(Message):
     def __init__(self, currentTerm, sender, receiver, candidateId, lastLogIndex, lastLogTerm):

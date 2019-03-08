@@ -1,4 +1,4 @@
-from raftmessage import Message
+from raftMessage import Message
 
 class AppendEntry(Message):
     def __init__(self,  term, sender, receiver, leaderId, prevLogTerm, prevLogIndex, entries, commitIndex):
