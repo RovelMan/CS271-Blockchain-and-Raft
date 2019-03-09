@@ -47,7 +47,24 @@ class Server(object):
 
   def setupCommandTerminal(self):
     command = ''
-    while command != 'q': 
+    while command != 'q':
+      print("Commands:")
+      print("\tSee blockchain: b")
+      print("\tQuit: q")
+      command = raw_input("Enter command: ")
+      if command == 'q':
+        print("Quitting")
+        break
+      elif command == 'b':
+        print("Printing blockchain...")
+        for block in self.blockchain:
+          printBlock(block)
+      else:
+        print("Invalid command! Try again...")
+
+  def setupQuitting(self):
+    command = ''
+    while command != 'q':
       print("Commands:")
       print("\tSee blockchain: b")
       print("\tQuit: q")
@@ -100,7 +117,8 @@ class Server(object):
         print("I got request vote")
         self.currentState.respondToRequestVote(self, data_object)
       elif (isinstance(data_object, AppendEntry)):
-          print("Got heartbeat")
+          if(data_object.entries == []):
+            print("Got heartbeat")
       elif (isinstance(data_object, str)):
         trans = data_object
         print("Transaction received!", trans)
