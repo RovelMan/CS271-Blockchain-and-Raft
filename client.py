@@ -1,4 +1,5 @@
 import sys, socket, pickle, threading, time, clientConfig
+from messages.serverToClient import ServerToClient
 
 class Client(object):
 
@@ -30,7 +31,7 @@ class Client(object):
 
   def setupCommandTerminal(self):
     command = ''
-    while command != 'q': 
+    while command != 'q':
       print("Commands:")
       print("\tMake transaction: m")
       print("\tQuit: q")
@@ -56,6 +57,9 @@ class Client(object):
         trans = data_object
         print("Transaction received!", trans)
         self.recieveMoneyFromClient(trans)
+      elif (isinstance(data_object, ServerToClient)):
+        print("Now the leader is: " + str(data_object.leaderPort))
+        self.serverPort = data_object.leaderPort
       else:
         print("K bye")
       conn.close()
@@ -109,10 +113,10 @@ class Client(object):
       print("Server" + 'x'.upper() + " is down!")
 
 if __name__ == '__main__':
-  client = Client(sys.argv[1])    
+  client = Client(sys.argv[1])
 
   command = ''
-  while command != 'q': 
+  while command != 'q':
     print("Commands:")
     print("\tMake transaction: m")
     print("\tQuit: q")
@@ -132,4 +136,3 @@ if __name__ == '__main__':
         print("Server" + 'x'.upper() + " is down!")
     else:
       print("Invalid command! Try again...")
-      

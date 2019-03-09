@@ -1,7 +1,9 @@
 from server import *
 from messages.appendEntry import AppendEntry
+from messages.serverToClient import ServerToClient
 import socket
 import serverConfig
+import clientConfig
 
 class Leader:
 
@@ -18,6 +20,12 @@ class Leader:
                 )
                 self.sendHeartbeat(heartbeat)
         print("Heartbeat sent")
+        for clientID in clientConfig.CLIENT_PORTS.keys():
+            message = ServerToClient(
+                server.currentTerm, server.id, clientConfig.CLIENT_PORTS[clientID], serverConfig.SERVER_PORTS[server.id]
+            )
+            self.sendHeartbeat(message)
+        print("Clients informed")
 
     def sendHeartbeat(self, heartbeat):
         try:
@@ -28,6 +36,11 @@ class Leader:
             s.send(dataString)
             s.close()
         except socket.error as e:
-            for id, port in serverConfig.SERVER_PORTS.items():
-                if port == heartbeat.receiver:
-                    print(str(id).upper()+" is down")
+            if(heartbeat.receiver/7000 < 1):
+                for id2, port2 in clientConfig.CLIENT_PORTS.items():
+                    if port2 == heartbeat.receiver:
+                        print(str(id2).upper()+" is down")
+            else:
+                for id, port in serverConfig.SERVER_PORTS.items():
+                    if port == heartbeat.receiver:
+                        print(str(id).upper()+" is down")
