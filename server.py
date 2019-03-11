@@ -6,6 +6,7 @@ from messages.appendEntry import AppendEntry
 from states.candidate import *
 from states.follower import *
 import serverConfig
+import clientConfig
 import random
 
 #serverState = {'follower': 0, 'candidate': 1, 'leader': 2}
@@ -90,6 +91,7 @@ class Server(object):
         self.tempTxns.append(trans)
         if len(self.tempTxns) == 2:
           self.addToBlockchain(self.tempTxns)
+          self.sendMoneyUpdateToClients(self.tempTxns)
           self.tempTxns = []
       else:
         print("K bye")
@@ -119,6 +121,19 @@ class Server(object):
     else:
       block.hash_prev_block(self.blockchain[len(self.blockchain)-1])
     self.blockchain.append(block)
+
+  def sendMoneyUpdateToClients(self, txns):
+    clientPorts = clientConfig.CLIENT_PORTS
+    for clientId in clientPorts:
+      for trans in txns:
+        if trans.split(' ')[0].lower() == clientId or trans.split(' ')[1].lower() == clientId:
+          try:
+            s = socket.socket()
+            s.connect((self.host, clientPorts[clientId]))
+            s.send(pickle.dumps(trans))
+            s.close()
+          except:
+            print("Client" + str(clientId).upper() + " is down!") 
 
 if __name__ == '__main__':
   state = Follower()
