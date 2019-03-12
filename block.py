@@ -43,6 +43,10 @@ class Block:
         )
         self.hashPrev = hashPrev.hexdigest()
 
+    def __str__(self):
+        printBlock(self)
+        return " "
+
 def printBlock(block):
     print("\tCurrent term: " + str(block.currentTerm))
     print("\tNonce: " + str(block.nonce))

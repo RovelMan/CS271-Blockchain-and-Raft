@@ -8,8 +8,6 @@ from states.follower import *
 import serverConfig
 import random
 
-#serverState = {'follower': 0, 'candidate': 1, 'leader': 2}
-
 class Server(object):
 
   def __init__(self, id, state):
@@ -84,6 +82,11 @@ class Server(object):
       elif (isinstance(data_object, AppendEntry)):
           if(data_object.entries == []):
             print("Got heartbeat")
+          else:
+            self.blockchain.append(data_object.entries[0])
+            print("I GOT A NEW BLOCKKK YAYAYYAYAY")
+            for x in range(len(self.blockchain)):
+              print(self.blockchain[x])
       elif (isinstance(data_object, str)):
         trans = data_object
         print("Transaction received!", trans)
@@ -119,6 +122,9 @@ class Server(object):
     else:
       block.hash_prev_block(self.blockchain[len(self.blockchain)-1])
     self.blockchain.append(block)
+    if(isinstance(self.currentState, Leader)):
+        print("I am going to now append the block")
+        self.currentState.startAppendEntry(self, block)
 
 if __name__ == '__main__':
   state = Follower()

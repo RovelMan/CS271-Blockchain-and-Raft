@@ -18,6 +18,7 @@ class Leader:
                 heartbeat = AppendEntry(
                     server.currentTerm, server.id, serverConfig.SERVER_PORTS[recID], server.id, server.lastLogTerm, server.lastLogIndex, [], 0
                 )
+                print("Sending HEARTBEAT to " + str(heartbeat.receiver))
                 self.sendHeartbeat(heartbeat)
         print("Heartbeat sent")
         for clientID in clientConfig.CLIENT_PORTS.keys():
@@ -30,7 +31,6 @@ class Leader:
     def sendHeartbeat(self, heartbeat):
         try:
             s = socket.socket()
-            print("Sending HEARTBEAT to " + str(heartbeat.receiver))
             s.connect(("127.0.0.1", heartbeat.receiver))
             dataString = pickle.dumps(heartbeat)
             s.send(dataString)
@@ -44,3 +44,15 @@ class Leader:
                 for id, port in serverConfig.SERVER_PORTS.items():
                     if port == heartbeat.receiver:
                         print(str(id).upper()+" is down")
+
+    def startAppendEntry(self, server, block):
+        sender = server.id
+        for recID in serverConfig.SERVER_PORTS.keys():
+            if (recID != sender):
+                apmessage = AppendEntry(
+                    server.currentTerm, server.id, serverConfig.SERVER_PORTS[recID], server.id,
+                    server.lastLogTerm, server.lastLogIndex, [block], 0
+                )
+                print("Sending APPENDENTRY to " + str(apmessage.receiver))
+                self.sendHeartbeat(apmessage)
+        print("Sent AppendEntries to all servers")

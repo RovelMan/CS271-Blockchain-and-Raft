@@ -105,8 +105,8 @@ class Client(object):
     amount = raw_input("How much? ")
     try:
       s = socket.socket()
-      print("Sending transaction to " + str(7100))
-      s.connect(("127.0.0.1", 7100))
+      print("Sending transaction to " + str(self.serverPort))
+      s.connect(("127.0.0.1", self.serverPort))
       s.send(pickle.dumps(str(self.id).upper() + " " + str(reciever).upper() + " " + str(amount)))
       s.close()
     except:
