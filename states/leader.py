@@ -45,22 +45,22 @@ class Leader:
                     if port == heartbeat.receiver:
                         print(str(id).upper()+" is down")
 
-    def sendHeartbeat(self, server):
-        sender = server.id
-        for recID in serverConfig.SERVER_PORTS.keys():
-            if (recID != sender):
-                heartbeat = AppendEntry(
-                    server.currentTerm, server.id, serverConfig.SERVER_PORTS[recID], server.id, server.lastLogTerm, server.lastLogIndex, [], 0
-                )
-                try:
-                    s = socket.socket()
-                    print("Sending HEARTBEAT to " + str(heartbeat.receiver))
-                    s.connect(("127.0.0.1", heartbeat.receiver))
-                    dataString = pickle.dumps(heartbeat)
-                    s.send(dataString)
-                    s.close()
-                except socket.error as e:
-                    for id, port in serverConfig.SERVER_PORTS.items():
-                        if port == heartbeat.receiver:
-                            print(str(id).upper()+" is down")
+    # def sendHeartbeat(self, server):
+    #     sender = server.id
+    #     for recID in serverConfig.SERVER_PORTS.keys():
+    #         if (recID != sender):
+    #             heartbeat = AppendEntry(
+    #                 server.currentTerm, server.id, serverConfig.SERVER_PORTS[recID], server.id, server.lastLogTerm, server.lastLogIndex, [], 0
+    #             )
+    #             try:
+    #                 s = socket.socket()
+    #                 print("Sending HEARTBEAT to " + str(heartbeat.receiver))
+    #                 s.connect(("127.0.0.1", heartbeat.receiver))
+    #                 dataString = pickle.dumps(heartbeat)
+    #                 s.send(dataString)
+    #                 s.close()
+    #             except socket.error as e:
+    #                 for id, port in serverConfig.SERVER_PORTS.items():
+    #                     if port == heartbeat.receiver:
+    #                         print(str(id).upper()+" is down")
 
