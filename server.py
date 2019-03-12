@@ -5,6 +5,7 @@ from messages.requestVote import RequestVote, RequestVoteResponse
 from messages.appendEntry import AppendEntry
 from states.candidate import *
 from states.follower import *
+from states.leader import *
 import serverConfig
 import clientConfig
 import random
@@ -31,6 +32,11 @@ class Server(object):
     self.currentTerm = 0
     self.lastLogTerm = 0
     self.lastLogIndex = 0
+
+    self.currentInterval = 0
+    self.interval = random.randint(6,20)
+    self.defaultInterval = 20
+
     print("Setup for Server" + self.id.upper() + " done!")
     self.run()
 
@@ -40,8 +46,7 @@ class Server(object):
 
   def initializeAllThreads(self):
     socketThread = threading.Thread(target=self.setupListeningSocket, args=(self.host, self.port))
-    timeout = random.randint(6,20)
-    timerThread = threading.Thread(target=self.setupTimer, args=(timeout,))
+    timerThread = threading.Thread(target=self.setupTimer, args=(self.interval,))
     socketThread.daemon, timerThread.daemon = True, True
     socketThread.start()
     timerThread.start()
@@ -74,17 +79,18 @@ class Server(object):
       data_object = pickle.loads(data)
       print("Message recieved: " + str(data_object))
       if (isinstance(data_object, RequestVoteResponse)):
-        self.message = "STOP"
+        # self.message = "STOP"
         if(isinstance(self.currentState, Candidate)):
             self.currentState.handleResponseVote(self, data_object)
         continue
       elif (isinstance(data_object, RequestVote)):
-        self.message = "STOP"
+        # self.message = "STOP"
         print("I got request vote")
         self.currentState.respondToRequestVote(self, data_object)
       elif (isinstance(data_object, AppendEntry)):
           if(data_object.entries == []):
             print("Got heartbeat")
+            self.currentInterval = self.defaultInterval
       elif (isinstance(data_object, str)):
         trans = data_object
         print("Transaction received!", trans)
@@ -97,21 +103,25 @@ class Server(object):
         print("K bye")
       conn.close()
 
-  def setupTimer(self, interval=1):
-    currentInterval = interval
+  def setupTimer(self, interval):
+    self.currentInterval = interval
     while True:
       time.sleep(1)
-      if currentInterval == 0:
-        print("Message recieved!")
+      if self.currentInterval == 0:
+        if(isinstance(self.currentState,Leader)):
+          self.currentInterval = self.defaultInterval
+          continue
+        print("Timed out!")
         self.currentState = Candidate()
         self.currentState.startElection(self)
         return
-      if self.message == "STOP":
-          print("Timer stopped")
-          break
-      else:
-        print('Timer: ' + str(currentInterval) + ' seconds left')
-        currentInterval -= 1
+      if self.currentInterval == 5 and isinstance(self.currentState, Leader):
+        self.currentState.sendHeartbeat(self)
+      # if self.message == "STOP":
+      #     print("Timer reset")
+      # else:
+      print('Timer: ' + str(self.currentInterval) + ' seconds left')
+      self.currentInterval -= 1
 
   def addToBlockchain(self, txns):
     block = Block(self.currentTerm, txns)
