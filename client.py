@@ -12,6 +12,7 @@ class Client(object):
     self.port = clientConfig.CLIENT_PORTS[id]
     self.serverPort = 7100
     self.amount = 1000
+    self.sendMoney = False
     with open("clientInputFile.txt", "r") as f:
       transactions = f.readlines()
     self.transactions = [x.strip() for x in transactions]
@@ -35,11 +36,14 @@ class Client(object):
       print("Commands:")
       print("\tMake transaction: m")
       print("\tQuit: q")
+      print("\tStart sending money: s")
       command = raw_input("Enter command: ")
       if command == 'q':
         print("Quitting")
       elif command == 'm':
         self.makeTransaction()
+      elif command == 's':
+        self.sendMoney = True
       else:
         print("Invalid command! Try again...")
 
@@ -53,10 +57,9 @@ class Client(object):
       data_object = pickle.loads(data)
       print("Message recieved: " + str(data_object))
       if (isinstance(data_object, str)):
-        # Add if statement for ack-string from server when transaction is comitted
         trans = data_object
-        print("Transaction received!", trans)
-        self.recieveMoneyFromClient(trans)
+        print("Money update from server!", trans)
+        self.recieveMoneyUpdateFromServer(trans)
       elif (isinstance(data_object, ServerToClient)):
         print("Now the leader is: " + str(data_object.leaderPort))
         self.serverPort = data_object.leaderPort
@@ -65,34 +68,28 @@ class Client(object):
       conn.close()
 
   def setupTimer(self, interval=1):
-    time.sleep(10)
+    time.sleep(5)
     while True:
-      for trans in self.transactions:
-        if trans.split(" ")[0] == self.id.upper():
-          self.sendMoneyToClient(trans)
-        time.sleep(1)
-      print("No more transactions")
-      break
+      if self.sendMoney:
+        for trans in self.transactions:
+          if trans.split(" ")[0] == self.id.upper():
+            self.tellServer(trans)
+          time.sleep(1)
+        print("No more transactions")
+        break
 
-  def sendMoneyToClient(self, trans):
-    self.amount -= int(trans.split(' ')[2])
-    try:
-      s = socket.socket()
-      print("Sending amount " + str(trans[2]) + " to " + str(trans[1]))
-      s.connect((self.host, self.port))
-      s.send(pickle.dumps(trans))
-      s.close()
-    except:
-      print("Client " + str(trans[2]) + " is down!")
-
-  def recieveMoneyFromClient(self, trans):
-    self.amount += int(trans.split(' ')[2])
-    self.tellServer(trans)
+  def recieveMoneyUpdateFromServer(self, trans):
+    if trans.split(' ')[0].lower() == self.id:
+      self.amount -= int(trans.split(' ')[2])
+    if trans.split(' ')[1].lower() == self.id:
+      self.amount += int(trans.split(' ')[2])
+    print("My money: " + str(self.amount))
 
   def tellServer(self, trans):
     try:
       s = socket.socket()
-      print("Sending transaction to server " + str(self.serverPort))
+      print("Want to send amount " + str(trans[2]) + " to " + str(trans[1]))
+      print("\tTelling server " + str(self.serverPort))
       s.connect((self.host, self.serverPort))
       s.send(pickle.dumps(trans))
       s.close()
@@ -106,7 +103,7 @@ class Client(object):
     try:
       s = socket.socket()
       print("Sending transaction to " + str(self.serverPort))
-      s.connect(("127.0.0.1", self.serverPort))
+      s.connect((self.host, self.serverPort))
       s.send(pickle.dumps(str(self.id).upper() + " " + str(reciever).upper() + " " + str(amount)))
       s.close()
     except:
@@ -114,25 +111,3 @@ class Client(object):
 
 if __name__ == '__main__':
   client = Client(sys.argv[1])
-
-  command = ''
-  while command != 'q':
-    print("Commands:")
-    print("\tMake transaction: m")
-    print("\tQuit: q")
-    command = raw_input("Enter command: ")
-    if command == 'q':
-      print("Quitting")
-    elif command == 'm':
-      reciever = raw_input("To whom? (b or c) ")
-      amount = raw_input("How much? ")
-      try:
-        s = socket.socket()
-        print("Sending transaction to " + str(7100))
-        s.connect(("127.0.0.1", 7100))
-        s.send(pickle.dumps("A " + str(reciever).upper() + " " + str(amount)))
-        s.close()
-      except:
-        print("Server" + 'x'.upper() + " is down!")
-    else:
-      print("Invalid command! Try again...")

@@ -5,7 +5,9 @@ from messages.requestVote import RequestVote, RequestVoteResponse
 from messages.appendEntry import AppendEntry
 from states.candidate import *
 from states.follower import *
+# from states.leader import *
 import serverConfig
+import clientConfig
 import random
 
 class Server(object):
@@ -28,6 +30,11 @@ class Server(object):
     self.currentTerm = 0
     self.lastLogTerm = 0
     self.lastLogIndex = 0
+
+    # self.currentInterval = 0
+    # self.interval = random.randint(6,20)
+    # self.defaultInterval = 20
+
     print("Setup for Server" + self.id.upper() + " done!")
     self.run()
 
@@ -39,6 +46,7 @@ class Server(object):
     socketThread = threading.Thread(target=self.setupListeningSocket, args=(self.host, self.port))
     timeout = random.randint(6,20)
     timerThread = threading.Thread(target=self.setupTimer, args=(timeout,))
+    # timerThread = threading.Thread(target=self.setupTimer, args=(self.interval,))
     socketThread.daemon, timerThread.daemon = True, True
     socketThread.start()
     timerThread.start()
@@ -87,12 +95,14 @@ class Server(object):
             print("I GOT A NEW BLOCKKK YAYAYYAYAY")
             for x in range(len(self.blockchain)):
               print(self.blockchain[x])
+            # self.currentInterval = self.defaultInterval
       elif (isinstance(data_object, str)):
         trans = data_object
         print("Transaction received!", trans)
         self.tempTxns.append(trans)
         if len(self.tempTxns) == 2:
           self.addToBlockchain(self.tempTxns)
+          self.sendMoneyUpdateToClients(self.tempTxns)
           self.tempTxns = []
       else:
         print("K bye")
@@ -104,9 +114,15 @@ class Server(object):
       time.sleep(1)
       if currentInterval == 0:
         print("Message recieved!")
+        # if(isinstance(self.currentState,Leader)):
+        #   self.currentInterval = self.defaultInterval
+        #   continue
+        # print("Timed out!")
         self.currentState = Candidate()
         self.currentState.startElection(self)
         return
+      # if self.currentInterval == 5 and isinstance(self.currentState, Leader):
+      #   self.currentState.sendHeartbeat(self)
       if self.message == "STOP":
           print("Timer stopped")
           break
@@ -125,6 +141,19 @@ class Server(object):
     if(isinstance(self.currentState, Leader)):
         print("I am going to now append the block")
         self.currentState.startAppendEntry(self, block)
+
+  def sendMoneyUpdateToClients(self, txns):
+    clientPorts = clientConfig.CLIENT_PORTS
+    for clientId in clientPorts:
+      for trans in txns:
+        if trans.split(' ')[0].lower() == clientId or trans.split(' ')[1].lower() == clientId:
+          try:
+            s = socket.socket()
+            s.connect((self.host, clientPorts[clientId]))
+            s.send(pickle.dumps(trans))
+            s.close()
+          except:
+            print("Client" + str(clientId).upper() + " is down!") 
 
 if __name__ == '__main__':
   state = Follower()
