@@ -9,3 +9,8 @@ class AppendEntry(Message):
         self.prevLogIndex = prevLogIndex
         self.entries = entries
         self.commitIndex = commitIndex
+
+class AcceptAppendEntry(Message):
+    def __init__(self, currentTerm, sender, receiver, acceptEntry):
+        Message.__init__(self, currentTerm, sender, receiver)
+        self.acceptEntry = acceptEntry

@@ -56,8 +56,25 @@ class Leader:
             if (recID != sender):
                 apmessage = AppendEntry(
                     server.currentTerm, server.id, serverConfig.SERVER_PORTS[recID], server.id,
-                    server.lastLogTerm, server.lastLogIndex, [block], 0
+                    server.lastLogTerm, server.lastLogIndex-1, [block], 0
                 )
                 print("Sending APPENDENTRY to " + str(apmessage.receiver))
-                self.sendHeartbeat(apmessage)
+                self.sendMessageToSocket(apmessage)
         print("Sent AppendEntries to all servers")
+
+    def sendWholeBlockchain(self, server, data):
+        try:
+            s = socket.socket()
+            s.connect(("127.0.0.1", serverConfig.SERVER_PORTS[data.sender]))
+            dataString = pickle.dumps(server.blockchain)
+            s.send(dataString)
+            s.close()
+        except socket.error as e:
+            if(appendEntryMessage.receiver/7000 < 1):
+                for id2, port2 in clientConfig.CLIENT_PORTS.items():
+                    if port2 == appendEntryMessage.receiver:
+                        print(str(id2).upper()+" is down")
+            else:
+                for id, port in serverConfig.SERVER_PORTS.items():
+                    if port == appendEntryMessage.receiver:
+                        print(str(id).upper()+" is down")

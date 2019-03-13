@@ -2,7 +2,7 @@ import sys, socket, threading, pickle, time, random
 from block import printBlock, Block
 from messages.raftMessage import Message
 from messages.requestVote import RequestVote, RequestVoteResponse
-from messages.appendEntry import AppendEntry
+from messages.appendEntry import AppendEntry, AcceptAppendEntry
 from states.candidate import *
 from states.follower import *
 # from states.leader import *
@@ -88,17 +88,15 @@ class Server(object):
         print("I got request vote")
         self.currentState.respondToRequestVote(self, data_object)
       elif (isinstance(data_object, AppendEntry)):
-          if(data_object.entries == []):
-            self.currentState = Follower()
-            self.currentInterval = random.randint(12,15) #self.interval
-            self.currentTerm = data_object.currentTerm
-            print("Got heartbeat")
-          else:
-            self.blockchain.append(data_object.entries[0])
-            print("I GOT A NEW BLOCKKK YAYAYYAYAY")
+          self.currentState.answerLeader(self, data_object)
             # for x in range(len(self.blockchain)):
             #   print(self.blockchain[x])
             # self.currentInterval = self.defaultInterval
+      elif (isinstance(data_object, AcceptAppendEntry)):
+        if not data_object.acceptEntry:
+          # TODO: Send the whole blockchain to the asker
+          self.currentState.sendWholeBlockchain(self, data_object)
+          
       elif (isinstance(data_object, str)):
         trans = data_object
         print("Transaction received!", trans)
@@ -107,6 +105,10 @@ class Server(object):
           self.addToBlockchain(self.tempTxns)
           self.sendMoneyUpdateToClients(self.tempTxns)
           self.tempTxns = []
+      elif (isinstance(data_object, list)):
+        print("GOT WHOLE BLOCKCHAIN")
+        self.blockchain = data_object
+        self.lastLogIndex = len(data_object)
       else:
         print("K bye")
       conn.close()
@@ -139,6 +141,7 @@ class Server(object):
           print("Timer reset")
           continue
       else:
+        print('Timer: ' + str(self.currentInterval) + ' seconds left')
         self.currentInterval -= 1
 
   def addToBlockchain(self, txns):
@@ -148,6 +151,7 @@ class Server(object):
       block.hash_prev_block(None)
     else:
       block.hash_prev_block(self.blockchain[len(self.blockchain)-1])
+    self.lastLogIndex = len(self.blockchain) + 1
     self.blockchain.append(block)
     if(isinstance(self.currentState, Leader)):
         print("I am going to now append the block")
