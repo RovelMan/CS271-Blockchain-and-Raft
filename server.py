@@ -96,8 +96,8 @@ class Server(object):
           else:
             self.blockchain.append(data_object.entries[0])
             print("I GOT A NEW BLOCKKK YAYAYYAYAY")
-            for x in range(len(self.blockchain)):
-              print(self.blockchain[x])
+            # for x in range(len(self.blockchain)):
+            #   print(self.blockchain[x])
             # self.currentInterval = self.defaultInterval
       elif (isinstance(data_object, str)):
         trans = data_object
@@ -119,7 +119,7 @@ class Server(object):
       if self.currentInterval == 0:
         #print("Message recieved!")
         if(isinstance(self.currentState,Leader)):
-          self.currentState.sendLiveHeartbeat(self)
+          self.currentState.sendHeartbeatToAll(self)
           self.currentInterval = self.defaultInterval
           print('Timer: ' + str(self.currentInterval) + ' seconds left')
           continue
