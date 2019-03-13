@@ -31,9 +31,9 @@ class Server(object):
     self.lastLogTerm = 0
     self.lastLogIndex = 0
 
-    # self.currentInterval = 0
-    # self.interval = random.randint(6,20)
-    # self.defaultInterval = 20
+    self.currentInterval = 0
+    self.interval = random.randint(12,15)
+    self.defaultInterval = 8
 
     print("Setup for Server" + self.id.upper() + " done!")
     self.run()
@@ -77,7 +77,7 @@ class Server(object):
       data = conn.recv(1024)
       #print("Before unpickling: " + str(data))
       data_object = pickle.loads(data)
-      print("Message recieved: " + str(data_object))
+      #print("Message recieved: " + str(data_object))
       if (isinstance(data_object, RequestVoteResponse)):
         self.message = "STOP"
         if(isinstance(self.currentState, Candidate)):
@@ -89,6 +89,9 @@ class Server(object):
         self.currentState.respondToRequestVote(self, data_object)
       elif (isinstance(data_object, AppendEntry)):
           if(data_object.entries == []):
+            self.currentState = Follower()
+            self.currentInterval = random.randint(12,15) #self.interval
+            self.currentTerm = data_object.currentTerm
             print("Got heartbeat")
           else:
             self.blockchain.append(data_object.entries[0])
@@ -109,26 +112,34 @@ class Server(object):
       conn.close()
 
   def setupTimer(self, interval=1):
-    currentInterval = interval
+    self.currentInterval = self.interval
+    print('Timer: ' + str(self.currentInterval) + ' seconds left')
     while True:
       time.sleep(1)
-      if currentInterval == 0:
-        print("Message recieved!")
-        # if(isinstance(self.currentState,Leader)):
-        #   self.currentInterval = self.defaultInterval
-        #   continue
-        # print("Timed out!")
+      if self.currentInterval == 0:
+        #print("Message recieved!")
+        if(isinstance(self.currentState,Leader)):
+          self.currentState.sendLiveHeartbeat(self)
+          self.currentInterval = self.defaultInterval
+          print('Timer: ' + str(self.currentInterval) + ' seconds left')
+          continue
+        print("Timed out!")
         self.currentState = Candidate()
         self.currentState.startElection(self)
-        return
+        while(isinstance(self.currentState, Candidate)):
+            time.sleep(1)
+        continue
       # if self.currentInterval == 5 and isinstance(self.currentState, Leader):
       #   self.currentState.sendHeartbeat(self)
       if self.message == "STOP":
-          print("Timer stopped")
-          break
+          self.message = None
+          if( not (isinstance(self.currentState, Leader))):
+              self.currentInterval = self.interval
+              print('Timer: ' + str(self.currentInterval) + ' seconds left')
+          print("Timer reset")
+          continue
       else:
-        print('Timer: ' + str(currentInterval) + ' seconds left')
-        currentInterval -= 1
+        self.currentInterval -= 1
 
   def addToBlockchain(self, txns):
     block = Block(self.currentTerm, txns)
@@ -153,7 +164,7 @@ class Server(object):
             s.send(pickle.dumps(trans))
             s.close()
           except:
-            print("Client" + str(clientId).upper() + " is down!") 
+            print("Client" + str(clientId).upper() + " is down!")
 
 if __name__ == '__main__':
   state = Follower()
