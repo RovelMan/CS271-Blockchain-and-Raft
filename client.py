@@ -37,11 +37,14 @@ class Client(object):
       print("\tMake transaction: m")
       print("\tQuit: q")
       print("\tStart sending money: s")
+      print("\tPrint out my amount: p")
       command = raw_input("Enter command: ")
       if command == 'q':
         print("Quitting")
       elif command == 'm':
         self.makeTransactionManually()
+      elif command == 'p':
+        print("My money: " + str(self.amount))
       elif command == 's':
         self.sendMoney = True
       else:
