@@ -53,7 +53,7 @@ class Client(object):
     listeningPort.listen(5)
     while True:
       conn, addr = listeningPort.accept()
-      data = conn.recv(1024)
+      data = conn.recv(4096)
       data_object = pickle.loads(data)
       print("Message recieved: " + str(data_object))
       if (isinstance(data_object, str)):

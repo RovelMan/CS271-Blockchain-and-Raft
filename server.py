@@ -74,7 +74,7 @@ class Server(object):
     listeningPort.listen(5)
     while True:
       conn, addr = listeningPort.accept()
-      data = conn.recv(1024)
+      data = conn.recv(4096)
       #print("Before unpickling: " + str(data))
       data_object = pickle.loads(data)
       #print("Message recieved: " + str(data_object))
