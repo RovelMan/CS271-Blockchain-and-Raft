@@ -7,7 +7,6 @@ class Follower:
 
     def __init__(self):
         self.voteGiven = False
-        #self.timeout  = timeout
 
     def respondToRequestVote(self, server, voteRequest):
         print("---My server id: -- "+ str(server.id))
@@ -46,9 +45,9 @@ class Follower:
     def answerLeader(self, server, data):
         acceptEntryResponse = None
         server.currentState = Follower()
-        server.currentInterval = random.randint(12,15) #self.interval
+        server.currentInterval = random.randint(12,15)
         server.currentTerm = data.currentTerm
-        print(server.lastLogIndex, data.prevLogIndex)
+        # print(server.lastLogIndex, data.prevLogIndex)
         if server.lastLogIndex != data.prevLogIndex:
             acceptEntryResponse = AcceptAppendEntry(
                 server.currentTerm, server.id, serverConfig.SERVER_PORTS[data.sender], False
@@ -59,13 +58,11 @@ class Follower:
                 server.currentTerm, server.id, serverConfig.SERVER_PORTS[data.sender], True
             )
             if(data.entries == []):
-                # server.currentState = Follower()
-                # server.currentInterval = random.randint(12,15) #self.interval
-                # server.currentTerm = data.currentTerm
                 print("Got heartbeat")
             else:
                 server.lastLogIndex = len(server.blockchain) + 1
                 server.blockchain.append(data.entries[0])
-                print("I GOT A NEW BLOCKKK YAYAYYAYAY")
+                print("Got a new BLOCK")
+                server.tempTxns = []
         self.sendAcceptEntryResponseMessage(acceptEntryResponse)
             

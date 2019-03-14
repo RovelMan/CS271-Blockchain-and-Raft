@@ -65,6 +65,7 @@ class Server(object):
         print("Printing blockchain...")
         for block in self.blockchain:
           printBlock(block)
+        print("Length of blockchain: " + str(len(self.blockchain)))
       else:
         print("Invalid command! Try again...")
 
@@ -74,7 +75,7 @@ class Server(object):
     listeningPort.listen(5)
     while True:
       conn, addr = listeningPort.accept()
-      data = conn.recv(4096)
+      data = conn.recv(51200)
       #print("Before unpickling: " + str(data))
       data_object = pickle.loads(data)
       #print("Message recieved: " + str(data_object))
@@ -101,12 +102,12 @@ class Server(object):
         trans = data_object
         print("Transaction received!", trans)
         self.tempTxns.append(trans)
-        if len(self.tempTxns) == 2:
+        if (len(self.tempTxns) == 2 and isinstance(self.currentState,Leader)):
           self.addToBlockchain(self.tempTxns)
           self.sendMoneyUpdateToClients(self.tempTxns)
           self.tempTxns = []
       elif (isinstance(data_object, list)):
-        print("GOT WHOLE BLOCKCHAIN")
+        print("Got whole BLOCKCHAIN")
         self.blockchain = data_object
         self.lastLogIndex = len(data_object)
       else:
@@ -123,7 +124,7 @@ class Server(object):
         if(isinstance(self.currentState,Leader)):
           self.currentState.sendHeartbeatToAll(self)
           self.currentInterval = self.defaultInterval
-          print('Timer: ' + str(self.currentInterval) + ' seconds left')
+          # print('Timer: ' + str(self.currentInterval) + ' seconds left')
           continue
         print("Timed out!")
         self.currentState = Candidate()
@@ -135,13 +136,13 @@ class Server(object):
       #   self.currentState.sendHeartbeat(self)
       if self.message == "STOP":
           self.message = None
-          if( not (isinstance(self.currentState, Leader))):
+          if ( not (isinstance(self.currentState, Leader))):
               self.currentInterval = self.interval
-              print('Timer: ' + str(self.currentInterval) + ' seconds left')
+              # print('Timer: ' + str(self.currentInterval) + ' seconds left')
           print("Timer reset")
           continue
       else:
-        print('Timer: ' + str(self.currentInterval) + ' seconds left')
+        # print('Timer: ' + str(self.currentInterval) + ' seconds left')
         self.currentInterval -= 1
 
   def addToBlockchain(self, txns):

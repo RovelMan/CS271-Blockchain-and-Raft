@@ -40,4 +40,4 @@ class Candidate:
         if (len(self.votesReceived)+1 >=2):
             server.currentState = Leader()
             server.currentState.initiateLeader(server)
-            print(" I am now leader")
+            print("\tI AM NOW LEADER")

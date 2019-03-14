@@ -1,4 +1,4 @@
-import sys, socket, pickle, threading, time, clientConfig
+import sys, socket, pickle, threading, time, clientConfig, serverConfig
 from messages.serverToClient import ServerToClient
 
 class Client(object):
@@ -41,7 +41,7 @@ class Client(object):
       if command == 'q':
         print("Quitting")
       elif command == 'm':
-        self.makeTransaction()
+        self.makeTransactionManually()
       elif command == 's':
         self.sendMoney = True
       else:
@@ -53,7 +53,7 @@ class Client(object):
     listeningPort.listen(5)
     while True:
       conn, addr = listeningPort.accept()
-      data = conn.recv(4096)
+      data = conn.recv(51200)
       data_object = pickle.loads(data)
       print("Message recieved: " + str(data_object))
       if (isinstance(data_object, str)):
@@ -68,13 +68,13 @@ class Client(object):
       conn.close()
 
   def setupTimer(self, interval=1):
-    time.sleep(5)
+    time.sleep(0.1)
     while True:
       if self.sendMoney:
         for trans in self.transactions:
           if trans.split(" ")[0] == self.id.upper():
             self.tellServer(trans)
-          time.sleep(1)
+          time.sleep(0.1)
         print("No more transactions")
         break
 
@@ -86,28 +86,29 @@ class Client(object):
     print("My money: " + str(self.amount))
 
   def tellServer(self, trans):
-    try:
-      s = socket.socket()
-      print("Want to send amount " + str(trans[2]) + " to " + str(trans[1]))
-      print("\tTelling server " + str(self.serverPort))
-      s.connect((self.host, self.serverPort))
-      s.send(pickle.dumps(trans))
-      s.close()
-    except:
-      print("Server " + str(self.serverPort) + " is down!")
-    return
+    print("Want to send amount " + str(trans[2]) + " to " + str(trans[1]))
+    print("\tTelling servers...")
+    for id in serverConfig.SERVER_PORTS:
+      try:
+        s = socket.socket()
+        s.connect((self.host, serverConfig.SERVER_PORTS[id]))
+        s.send(pickle.dumps(trans))
+        s.close()
+      except:
+        print("Server" + id + " is down!")
 
-  def makeTransaction(self):
+  def makeTransactionManually(self):
     reciever = raw_input("To whom? (b or c) ")
     amount = raw_input("How much? ")
-    try:
-      s = socket.socket()
-      print("Sending transaction to " + str(self.serverPort))
-      s.connect((self.host, self.serverPort))
-      s.send(pickle.dumps(str(self.id).upper() + " " + str(reciever).upper() + " " + str(amount)))
-      s.close()
-    except:
-      print("Server" + 'x'.upper() + " is down!")
+    print("Sending transaction to servers...")
+    for id in serverConfig.SERVER_PORTS:
+      try:
+        s = socket.socket()
+        s.connect((self.host, serverConfig.SERVER_PORTS[id]))
+        s.send(pickle.dumps(str(self.id).upper() + " " + str(reciever).upper() + " " + str(amount)))
+        s.close()
+      except:
+        print("Server" + id.upper() + " is down!")
 
 if __name__ == '__main__':
   client = Client(sys.argv[1])
