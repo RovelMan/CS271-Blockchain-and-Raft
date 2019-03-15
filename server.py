@@ -25,7 +25,6 @@ class Server(object):
     self.port = serverConfig.SERVER_PORTS[id]
     self.message = None
     self.currentState = state
-    self.log = {}
     self.commitIndex = 0
     self.currentTerm = 0
     self.lastLogTerm = 0
@@ -136,11 +135,6 @@ class Server(object):
         self.currentState = Candidate()
         self.currentState.startElection(self)
         self.message = "STOP"
-        # while(isinstance(self.currentState, Candidate)):
-        #     time.sleep(1)
-        # continue
-      # if self.currentInterval == 5 and isinstance(self.currentState, Leader):
-      #   self.currentState.sendHeartbeat(self)
       if self.message == "STOP":
           self.message = None
           if ( not (isinstance(self.currentState, Leader))):

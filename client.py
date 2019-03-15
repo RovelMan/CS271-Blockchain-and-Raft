@@ -13,7 +13,7 @@ class Client(object):
     self.serverPort = 7100
     self.amount = 1000
     self.sendMoney = False
-    with open("clientInputFile.txt", "r") as f:
+    with open("input_100.txt", "r") as f:
       transactions = f.readlines()
     self.transactions = [x.strip() for x in transactions]
     print("Setup for Client" + id.upper() + " done!")
@@ -78,7 +78,7 @@ class Client(object):
           if trans.split(" ")[0] == self.id.upper():
             self.tellServer(trans)
           time.sleep(0.1)
-        print("No more transactions")
+        print("NO MORE TRANSACTIONS")
         break
 
   def recieveMoneyUpdateFromServer(self, trans):
