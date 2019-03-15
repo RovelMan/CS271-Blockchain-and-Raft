@@ -54,7 +54,7 @@ class Server(object):
   def setupCommandTerminal(self):
     command = ''
     while command != 'q':
-      print("Commands:")
+      print("\nCommands:")
       print("\tSee blockchain: b")
       print("\tQuit: q")
       command = raw_input("Enter command: ")
@@ -87,17 +87,21 @@ class Server(object):
       elif (isinstance(data_object, RequestVote)):
         self.message = "STOP"
         print("I got request vote")
-        self.currentState.respondToRequestVote(self, data_object)
+        if(isinstance(self.currentState,Candidate)):
+            if (self.currentTerm < data_object.currentTerm or (self.currentTerm == data_object.currentTerm and self.id < data_object.candidateId)):
+                self.currentState = Follower()
+                self.currentState.respondToRequestVote(self, data_object)
+        elif isinstance(self.currentState, Follower):
+                self.currentState.respondToRequestVote(self, data_object)
       elif (isinstance(data_object, AppendEntry)):
-          self.currentState.answerLeader(self, data_object)
+        self.currentState = Follower()
+        self.currentState.answerLeader(self, data_object)
             # for x in range(len(self.blockchain)):
             #   print(self.blockchain[x])
             # self.currentInterval = self.defaultInterval
       elif (isinstance(data_object, AcceptAppendEntry)):
         if not data_object.acceptEntry:
-          # TODO: Send the whole blockchain to the asker
           self.currentState.sendWholeBlockchain(self, data_object)
-          
       elif (isinstance(data_object, str)):
         trans = data_object
         print("Transaction received!", trans)
@@ -116,17 +120,18 @@ class Server(object):
 
   def setupTimer(self, interval=1):
     self.currentInterval = self.interval
-    print('Timer: ' + str(self.currentInterval) + ' seconds left')
+    print("\nTimer: " + str(self.currentInterval) + " seconds left")
     while True:
       time.sleep(1)
       if self.currentInterval == 0:
         #print("Message recieved!")
         if(isinstance(self.currentState,Leader)):
+          print("Sending HEARTBEAT")
           self.currentState.sendHeartbeatToAll(self)
           self.currentInterval = self.defaultInterval
           # print('Timer: ' + str(self.currentInterval) + ' seconds left')
           continue
-        print("Timed out!")
+        print("TIMEOUT!")
         self.currentState = Candidate()
         self.currentState.startElection(self)
         while(isinstance(self.currentState, Candidate)):
@@ -139,7 +144,7 @@ class Server(object):
           if ( not (isinstance(self.currentState, Leader))):
               self.currentInterval = self.interval
               # print('Timer: ' + str(self.currentInterval) + ' seconds left')
-          print("Timer reset")
+          print("TIMER RESET")
           continue
       else:
         # print('Timer: ' + str(self.currentInterval) + ' seconds left')

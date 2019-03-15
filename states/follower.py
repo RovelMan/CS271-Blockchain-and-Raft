@@ -9,7 +9,7 @@ class Follower:
         self.voteGiven = False
 
     def respondToRequestVote(self, server, voteRequest):
-        print("---My server id: -- "+ str(server.id))
+        # print("---My server id: -- "+ str(server.id))
         if (server.currentTerm < voteRequest.currentTerm and not self.voteGiven):
             self.voteGiven = True
             voteResponse = RequestVoteResponse(
@@ -32,7 +32,7 @@ class Follower:
     def sendAcceptEntryResponseMessage(self, acceptEntryResponse):
         try:
             s = socket.socket()
-            print("Sending ACCEPTENTRYRESPONSE " + str(acceptEntryResponse.acceptEntry) + " message to " + str(acceptEntryResponse.receiver))
+            # print("Sending ACCEPTENTRYRESPONSE " + str(acceptEntryResponse.acceptEntry) + " message to " + str(acceptEntryResponse.receiver))
             s.connect(("127.0.0.1", acceptEntryResponse.receiver))
             dataString = pickle.dumps(acceptEntryResponse)
             s.send(dataString)
@@ -52,13 +52,13 @@ class Follower:
             acceptEntryResponse = AcceptAppendEntry(
                 server.currentTerm, server.id, serverConfig.SERVER_PORTS[data.sender], False
             )
-            print("MY BLOCKCHAIN IS NOT THE SAME")
+            print("INCONSISTENT BLOCKCHAIN")
         else:
             acceptEntryResponse = AcceptAppendEntry(
                 server.currentTerm, server.id, serverConfig.SERVER_PORTS[data.sender], True
             )
             if(data.entries == []):
-                print("Got heartbeat")
+                print("Got HEARTBEAT")
             else:
                 server.lastLogIndex = len(server.blockchain) + 1
                 server.blockchain.append(data.entries[0])

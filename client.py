@@ -33,7 +33,7 @@ class Client(object):
   def setupCommandTerminal(self):
     command = ''
     while command != 'q':
-      print("Commands:")
+      print("\nCommands:")
       print("\tMake transaction: m")
       print("\tQuit: q")
       print("\tStart sending money: s")
@@ -44,7 +44,7 @@ class Client(object):
       elif command == 'm':
         self.makeTransactionManually()
       elif command == 'p':
-        print("My money: " + str(self.amount))
+        print("\nMY MONEY: " + str(self.amount))
       elif command == 's':
         self.sendMoney = True
       else:
@@ -98,12 +98,12 @@ class Client(object):
         s.send(pickle.dumps(trans))
         s.close()
       except:
-        print("Server" + id + " is down!")
+        print("Server" + id.upper() + " is down!")
 
   def makeTransactionManually(self):
-    reciever = raw_input("To whom? (b or c) ")
+    reciever = raw_input("\nTo whom? (b or c) ")
     amount = raw_input("How much? ")
-    print("Sending transaction to servers...")
+    print("\nSending transaction to servers...")
     for id in serverConfig.SERVER_PORTS:
       try:
         s = socket.socket()

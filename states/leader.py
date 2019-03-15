@@ -13,15 +13,15 @@ class Leader:
     def initiateLeader(self, server):
         self.nextIndex = server.lastLogIndex + 1
         self.sendHeartbeatToAll(server)
-        print("First Heartbeat sent")
+        print("\nAnnouncement HEARTBEAT sent to servers")
         for clientID in clientConfig.CLIENT_PORTS.keys():
             message = ServerToClient(
                 server.currentTerm, server.id, clientConfig.CLIENT_PORTS[clientID], serverConfig.SERVER_PORTS[server.id]
             )
             self.sendMessageToSocket(message)
-        print("Clients informed")
+        print("Announcement sent to clients")
         server.currentInterval = server.defaultInterval
-        print("Reset my timer to defaultInterval")
+        # print("Reset my timer to defaultInterval")
 
     def sendHeartbeatToAll(self, server):
         for recID in serverConfig.SERVER_PORTS.keys():
@@ -44,11 +44,11 @@ class Leader:
             if(appendEntryMessage.receiver/7000 < 1):
                 for id2, port2 in clientConfig.CLIENT_PORTS.items():
                     if port2 == appendEntryMessage.receiver:
-                        print(str(id2).upper()+" is down")
+                        print("\tClient"+ str(id2).upper()+" is down")
             else:
                 for id, port in serverConfig.SERVER_PORTS.items():
                     if port == appendEntryMessage.receiver:
-                        print(str(id).upper()+" is down")
+                        print("\tServer"+ str(id).upper()+" is down")
 
     def startAppendEntry(self, server, block):
         sender = server.id
