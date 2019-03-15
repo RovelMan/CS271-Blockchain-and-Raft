@@ -89,6 +89,7 @@ class Server(object):
         print("I got request vote")
         if(isinstance(self.currentState,Candidate)):
             if (self.currentTerm < data_object.currentTerm or (self.currentTerm == data_object.currentTerm and self.id < data_object.candidateId)):
+                print("STEPPING DOWN")
                 self.currentState = Follower()
                 self.currentState.respondToRequestVote(self, data_object)
         elif isinstance(self.currentState, Follower):
@@ -134,9 +135,10 @@ class Server(object):
         print("TIMEOUT!")
         self.currentState = Candidate()
         self.currentState.startElection(self)
-        while(isinstance(self.currentState, Candidate)):
-            time.sleep(1)
-        continue
+        self.message = "STOP"
+        # while(isinstance(self.currentState, Candidate)):
+        #     time.sleep(1)
+        # continue
       # if self.currentInterval == 5 and isinstance(self.currentState, Leader):
       #   self.currentState.sendHeartbeat(self)
       if self.message == "STOP":
